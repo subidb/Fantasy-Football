@@ -31,6 +31,36 @@ def check_and_send(e1, e2, pw):  # function to add a body and subject to the ema
             pass
 
 
+def parse_and_return(row1, row2, row3):  # row'i' = data scraped from webpage using bs4
+    # extracting required data and combining it to a zipped tuple list    
+    goal_list, assist_list, playerlist = [], [], []
+
+    # converting the extracted data into lists
+    for name in row1:  
+        playerlist.append(name.text)
+
+    for stat in row2:
+        goal_list.append(stat.text)
+        
+    for stat in row3:
+        assist_list.append(stat.text)
+
+    goal_list = [re.sub(r"\W", "", stat) for stat in goal_list]  # eliminating whitespaces
+    goal_list = [int(stat) for stat in goal_list]
+
+    assist_list = [re.sub(r"\W", "", stat) for stat in assist_list]
+    assist_list = [int(stat) for stat in assist_list]
+
+    # iterating over the 3 lists and combining/zipping the data into a list of tuples
+    # player_statlist[i] = (list1[i], list2[i], list3[i]), for better parsing later on 
+    player_statlist = list(zip(playerlist, goal_list, assist_list))   
+    player_statlist.sort()
+    # player_statlist = sorted(player_statlist, key=lambda x: x[1], reverse=True)
+
+    print(player_statlist)
+    print("Player Data Sent to MySQL database!")
+    return player_statlist
+
 
 def check_ratings():  # scrapes and extracts data from the premier league wesbite
 
@@ -44,9 +74,10 @@ def check_ratings():  # scrapes and extracts data from the premier league wesbit
     goalsrow = soup.find_all(class_="top-player-stats__goals-scored-number")
     assistsrow = soup.find_all(class_="top-player-stats__assists-number gel-double-pica")
 
+    return parse_and_return(namerow, goalsrow, assistsrow)
 
-# check_ratings()
 
+check_ratings()
 
 def send_email(email1, email2, passwd, content):  # content = List[(Email subject), (body)]
 
